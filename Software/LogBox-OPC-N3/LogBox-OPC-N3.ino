@@ -131,146 +131,145 @@ int INTERVAL_OPC_Readout = 		2000;			// Determines the Interval in which OPC is 
 //------------------------------------------//
 
 void setup() {
-  
-  //initialize OLED Display
-  // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
-  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
-    Serial.println(F("FATAL ERROR 0x2B - SSD1306 allocation failed"));
-    for(;;); // Don't proceed, loop forever
-  }
-  
-  display.clearDisplay();
-  display.display();
-  
-  //Serial
-  Serial.begin(115200);
-  delay(random(50,150));
-  
-  OLED_ASYNC_display_Startup_Logo();
-  delay(random(1000,2000));
-  
-  OLED_ASYNC_display_Startup_Bar();
-  delay(random(1500,2500));
-  
-  OLED_ASYNC_display_Startup_Bar_Fill(random(2,8));
-  delay(random(50,300));
-  
-  Serial.print("compiled: ");
-  Serial.print(__DATE__);
-  Serial.println(__TIME__);
-  
-  //Initialize RTC
-  Rtc.Begin();     //Starts I2C
-  //TODO: GET CURRENT TIME
-  Rtc.Enable32kHzPin(false);
-  Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone); 
-  
-  OLED_ASYNC_display_Startup_Bar_Fill(random(13,20));
-  delay(random(250,750));
 
-  //Get Curent Date and Time
-  RtcDateTime now = Rtc.GetDateTime();
+	//initialize OLED Display
+	// SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+	if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+		Serial.println(F("FATAL ERROR 0x2B - SSD1306 allocation failed"));
+		for(;;); // Don't proceed, loop forever
+	}
 
-  TIME_Year = now.Year();
-  TIME_Month = now.Month();
-  TIME_Day = now.Day();
-  TIME_Hour = now.Hour();
-  TIME_Min = now.Minute();
-  TIME_Sec = now.Second();
+	display.clearDisplay();
+	display.display();
 
-  //Prep the Filename
-  TMonth = String(TIME_Month);
-  TDay = String(TIME_Day);
-  THour = String(TIME_Hour);
-  TMin = String(TIME_Min);
-  TSec = String(TIME_Sec);
-  
-  
-  if(TIME_Month<10)
-  {
-    TMonth = '0' + String(TIME_Month);
-  }
-  if(TIME_Day<10)
-  {
-    TDay = '0' + String(TIME_Day);
-  }
-  if(TIME_Hour<10)
-  {
-    THour = '0' + String(TIME_Hour);
-  }
-  if(TIME_Min<10)
-  {
-    TMin = '0' + String(TIME_Min);
-  }
-  if(TIME_Sec<10)
-  {
-    TSec = '0' + String(TIME_Sec);
-  }
-  //Create Filename
-  FileName = String(TIME_Year) + '-' + TMonth + '-' + TDay + 'T' + THour + '-' + TMin + '-' + TSec + "+01-00.csv";
-  
-  OLED_ASYNC_display_Startup_Bar_Fill(random(25,35));
-  delay(random(250,750));
-  
-  //initialize OPC-N3
-  // turn on laser, fan and set high gain, use delay to make sure it is setup proper.
-  delay(50);
-  //myOPCN3.initialize();
-  delay(1000);
-  
-  OLED_ASYNC_display_Startup_Bar_Fill(random(45,65));
-  delay(random(500,1000));
-  
-  //Initialize SD CARD
-  pinMode(CSpin, OUTPUT);
-  if (!SD.begin(CSpin)) {
-    Serial.println("FATAL ERROR 0x1A - SD-Card failed, or not present");
-    // don't do anything more:
-    for(;;);
-  }
-  Serial.println("card initialized.");
-  //Write new File
-  
-  sensorData = SD.open(FileName, FILE_WRITE);
-  sensorData.close();  //Closing the file
-  
-  Serial.println(FileName);
-  
-  OLED_ASYNC_display_Startup_Bar_Fill(random(70,80));
-  delay(random(1000,1500));
-  
-  sensorData = SD.open(FileName, FILE_WRITE);
-  if (sensorData) {
-    //Write csv header
-    sensorData.println("DATE;INDEX;PM10");
-    // close the file:
-    sensorData.close();
-    Serial.print("New File Created: ");
-    Serial.println(FileName);
-  } else {
-    Serial.println("FATAL ERROR 0x1B - Cannot write to new File");
-    for(;;);
-  }
+	//Serial
+	Serial.begin(115200);
+	delay(random(50,150));
 
-  OLED_ASYNC_display_Startup_Bar_Fill(100);
-  delay(random(1000,1500));
-  
-  display.clearDisplay();
-  display.display();
-  delay(random(150,450));
+	OLED_ASYNC_display_Startup_Logo();
+	delay(random(1000,2000));
 
-  
+	OLED_ASYNC_display_Startup_Bar();
+	delay(random(1500,2500));
+
+	OLED_ASYNC_display_Startup_Bar_Fill(random(2,8));
+	delay(random(50,300));
+
+	Serial.print("compiled: ");
+	Serial.print(__DATE__);
+	Serial.println(__TIME__);
+
+	//Initialize RTC
+	Rtc.Begin();     //Starts I2C
+	Rtc.Enable32kHzPin(false);
+	Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone); 
+
+	OLED_ASYNC_display_Startup_Bar_Fill(random(13,20));
+	delay(random(250,750));
+
+	//Get Curent Date and Time
+	RtcDateTime now = Rtc.GetDateTime();
+
+	TIME_Year = now.Year();
+	TIME_Month = now.Month();
+	TIME_Day = now.Day();
+	TIME_Hour = now.Hour();
+	TIME_Min = now.Minute();
+	TIME_Sec = now.Second();
+
+	//Prep the Filename
+	TMonth = String(TIME_Month);
+	TDay = String(TIME_Day);
+	THour = String(TIME_Hour);
+	TMin = String(TIME_Min);
+	TSec = String(TIME_Sec);
 
 
-  //get the measurement since the start
-  TIME_measurement_start = millis();
-  
-  //set the timing variables to relative zero for the main loop
-  TIME_last_SD_save = millis();
-  TIME_last_display_update = millis();
-  TIME_last_RTC_update = millis();
-  TIME_last_OPC_readout = millis();
-  
+	if(TIME_Month<10)
+	{
+		TMonth = '0' + String(TIME_Month);
+	}
+	if(TIME_Day<10)
+	{
+		TDay = '0' + String(TIME_Day);
+	}
+	if(TIME_Hour<10)
+	{
+		THour = '0' + String(TIME_Hour);
+	}
+	if(TIME_Min<10)
+	{
+		TMin = '0' + String(TIME_Min);
+	}
+	if(TIME_Sec<10)
+	{
+		TSec = '0' + String(TIME_Sec);
+	}
+	//Create Filename
+	FileName = String(TIME_Year) + '-' + TMonth + '-' + TDay + 'T' + THour + '-' + TMin + '-' + TSec + "+01-00.csv";
+
+	OLED_ASYNC_display_Startup_Bar_Fill(random(25,35));
+	delay(random(250,750));
+
+	//initialize OPC-N3
+	// turn on laser, fan and set high gain, use delay to make sure it is setup proper.
+	delay(50);
+	//myOPCN3.initialize();
+	delay(1000);
+
+	OLED_ASYNC_display_Startup_Bar_Fill(random(45,65));
+	delay(random(500,1000));
+
+	//Initialize SD CARD
+	pinMode(CSpin, OUTPUT);
+	if (!SD.begin(CSpin)) {
+		Serial.println("FATAL ERROR 0x1A - SD-Card failed, or not present");
+		// don't do anything more:
+		for(;;);
+	}
+	Serial.println("card initialized.");
+	//Write new File
+
+	sensorData = SD.open(FileName, FILE_WRITE);
+	sensorData.close();  //Closing the file
+
+	Serial.println(FileName);
+
+	OLED_ASYNC_display_Startup_Bar_Fill(random(70,80));
+	delay(random(1000,1500));
+
+	sensorData = SD.open(FileName, FILE_WRITE);
+	if (sensorData) {
+		//Write csv header
+		sensorData.println("DATE;INDEX;PM10");
+		// close the file:
+		sensorData.close();
+		Serial.print("New File Created: ");
+		Serial.println(FileName);
+	} else {
+		Serial.println("FATAL ERROR 0x1B - Cannot write to new File");
+		for(;;);
+	}
+
+	OLED_ASYNC_display_Startup_Bar_Fill(100);
+	delay(random(1000,1500));
+
+	display.clearDisplay();
+	display.display();
+	delay(random(150,450));
+
+
+
+
+	//get the measurement since the start
+	TIME_measurement_start = millis();
+
+	//set the timing variables to relative zero for the main loop
+	TIME_last_SD_save = millis();
+	TIME_last_display_update = millis();
+	TIME_last_RTC_update = millis();
+	TIME_last_OPC_readout = millis();
+
 
 }
 
@@ -286,112 +285,101 @@ void setup() {
 
 
 void loop() {
-  //All Values, Inputs and Outputs will be updated asyncronous
-  
-  //Check for RTC Update
-  if(millis() - TIME_last_RTC_update > INTERVAL_RTC_Update)
-  {
-  	//UPDATE RTC
-  	TIME_last_RTC_update = millis() - (millis() - TIME_last_RTC_update - INTERVAL_RTC_Update);
-  	RtcDateTime now = Rtc.GetDateTime();
-  
-  	TIME_Year = now.Year();
-  	TIME_Month = now.Month();
-  	TIME_Day = now.Day();
-  	TIME_Hour = now.Hour();
-  	TIME_Min = now.Minute();
-  	TIME_Sec = now.Second();
-	
-  }
-  
-  //Check for Display Update
-  if(millis() - TIME_last_display_update > INTERVAL_Display_Update)
-  {
-	  //UPDATE DISPLAY
-	  TIME_last_display_update = millis() - (millis() - TIME_last_display_update - INTERVAL_Display_Update);
-	  
-	  //Upper Part
-	  OLED_ASYNC_display_divider();
-	  OLED_ASYNC_display_clock(TIME_Hour,TIME_Min,TIME_Sec);
-	  
-	  //Lower Part
-	  OLED_ASYNC_display_Identifier();
-	  OLED_ASYNC_display_vertical_divider();
-	  
-	  OLED_ASYNC_display_Elapsed_Time();
-	  OLED_ASYNC_display_HUM_and_TMP(24.46,54);
-	  OLED_ASYNC_display_PM_values(24.54,12.56,5.654);
-  }
-  
-  //Check for OPC Readout
-  if(millis() - TIME_last_OPC_readout > INTERVAL_OPC_Readout)
-  {
-	  //UPDATE OPC
-	  TIME_last_OPC_readout = millis() - (millis() - TIME_last_OPC_readout - INTERVAL_OPC_Readout);
-	  OLED_ASYNC_display_OPC_update_icon(15,3);
-      // TODO: Implement Measurement
-	  RtcTemperature temp = Rtc.GetTemperature();
-	  VAR_Temperature = temp.AsFloatDegC();
-	  VAR_PM_10 = 124.3;
-	  VAR_PM_2_5 = 234.8;
-	  VAR_PM_1 = 34.5;
-      
-	  delay(100);
-	  OLED_ASYNC_remove_OPC_update_icon(15,3);
-	  
-  }
-  
-  //Check for SD Card save
-  if(millis() - TIME_last_SD_save > INTERVAL_SD_Save)
-  {
-	  //UPDATE SD card
-	  TIME_last_SD_save = millis() - (millis() - TIME_last_SD_save - INTERVAL_SD_Save);
-	  
-	  OLED_ASYNC_display_save_icon(3,3);
-    //TODO, IMPLEMENT SAVING
-	  saveData(sensorData, FileName, VAR_Index, VAR_Temperature, VAR_PM_10, VAR_PM_2_5, VAR_PM_1, TIME_Hour, TIME_Min, TIME_Sec);
-    VAR_Index = VAR_Index + 1;
-	  delay(100);
-	  OLED_ASYNC_remove_save_icon(3,3);
-  }
-  
-  
-  //OPC INITIALIZE
-  /*HistogramData hist = myOPCN3.readHistogramData();
-  
-  // Get Temperature
-  Serial.print("Temperature: ");
-  VAR_Temperature = hist.getTempC();
-  Serial.println(VAR_Temperature);
-  
-  
-  // Get PM values
-  Serial.print("PM 10: ");
-  VAR_PM_10 = hist.pm10;
-  Serial.println(VAR_PM_10);
-  
-  // Get PM values
-  Serial.print("PM 2.5: ");
-  VAR_PM_2_5 = hist.pm2_5;
-  Serial.println(VAR_PM_2_5);
-  
-  // Get PM values
-  Serial.print("PM 1: ");
-  VAR_PM_1 = hist.pm1;
-  Serial.println(VAR_PM_1);
+	//All Values, Inputs and Outputs will be updated asyncronous
 
-  
-  //Draw the save icon
-  OLED_ASYNC_display_save_icon(3,3);
-  
-  //SAVE TO SD CARD
-  saveData(sensorData, FileName, VAR_Index,VAR_Temperature,VAR_PM_10,VAR_PM_2_5,VAR_PM_1,TIME_Hour,TIME_Min,TIME_Sec); // save to SD card
-  VAR_Index = VAR_Index + 1;
-  delay(50);
-  //Remove the save icon
-  OLED_ASYNC_remove_save_icon(3,3);
-  */
-  
+	//Check for RTC Update
+	if(millis() - TIME_last_RTC_update > INTERVAL_RTC_Update)
+	{
+		//UPDATE RTC
+		TIME_last_RTC_update = millis() - (millis() - TIME_last_RTC_update - INTERVAL_RTC_Update);
+		RtcDateTime now = Rtc.GetDateTime();
+
+		TIME_Year = now.Year();
+		TIME_Month = now.Month();
+		TIME_Day = now.Day();
+		TIME_Hour = now.Hour();
+		TIME_Min = now.Minute();
+		TIME_Sec = now.Second();
+
+	}
+
+	//Check for Display Update
+	if(millis() - TIME_last_display_update > INTERVAL_Display_Update)
+	{
+		//UPDATE DISPLAY
+		TIME_last_display_update = millis() - (millis() - TIME_last_display_update - INTERVAL_Display_Update);
+
+		//Upper Part
+		OLED_ASYNC_display_divider();
+		OLED_ASYNC_display_clock(TIME_Hour,TIME_Min,TIME_Sec);
+
+		//Lower Part
+		OLED_ASYNC_display_Identifier();
+		OLED_ASYNC_display_vertical_divider();
+
+		OLED_ASYNC_display_Elapsed_Time();
+		OLED_ASYNC_display_HUM_and_TMP(24.46,54);
+		OLED_ASYNC_display_PM_values(24.54,12.56,5.654);
+	}
+
+	//Check for OPC Readout
+	if(millis() - TIME_last_OPC_readout > INTERVAL_OPC_Readout)
+	{
+		//UPDATE OPC
+		TIME_last_OPC_readout = millis() - (millis() - TIME_last_OPC_readout - INTERVAL_OPC_Readout);
+		OLED_ASYNC_display_OPC_update_icon(15,3);
+		// TODO: Implement Measurement
+		RtcTemperature temp = Rtc.GetTemperature();
+		VAR_Temperature = temp.AsFloatDegC();
+		VAR_PM_10 = 124.3;
+		VAR_PM_2_5 = 234.8;
+		VAR_PM_1 = 34.5;
+
+		delay(100);
+		OLED_ASYNC_remove_OPC_update_icon(15,3);
+
+	}
+
+	//Check for SD Card save
+	if(millis() - TIME_last_SD_save > INTERVAL_SD_Save)
+	{
+		//UPDATE SD card
+		TIME_last_SD_save = millis() - (millis() - TIME_last_SD_save - INTERVAL_SD_Save);
+
+		OLED_ASYNC_display_save_icon(3,3);
+		//TODO, IMPLEMENT SAVING
+		saveData(sensorData, FileName, VAR_Index, VAR_Temperature, VAR_PM_10, VAR_PM_2_5, VAR_PM_1, TIME_Hour, TIME_Min, TIME_Sec);
+		VAR_Index = VAR_Index + 1;
+		delay(100);
+		OLED_ASYNC_remove_save_icon(3,3);
+	}
+
+
+	//OPC INITIALIZE
+	/*HistogramData hist = myOPCN3.readHistogramData();
+
+	// Get Temperature
+	Serial.print("Temperature: ");
+	VAR_Temperature = hist.getTempC();
+	Serial.println(VAR_Temperature);
+
+
+	// Get PM values
+	Serial.print("PM 10: ");
+	VAR_PM_10 = hist.pm10;
+	Serial.println(VAR_PM_10);
+
+	// Get PM values
+	Serial.print("PM 2.5: ");
+	VAR_PM_2_5 = hist.pm2_5;
+	Serial.println(VAR_PM_2_5);
+
+	// Get PM values
+	Serial.print("PM 1: ");
+	VAR_PM_1 = hist.pm1;
+	Serial.println(VAR_PM_1);
+	*/
+
 
 }
 
@@ -411,33 +399,35 @@ void loop() {
 //▄█ █▄▀   █▄▄ █▀█ █▀▄ █▄▀   ▄█ █▀█ ▀▄▀ █ █░▀█ █▄█
 
 void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Temperature, float VAR_PM_10, float VAR_PM_2_5, float VAR_PM_1, int TIME_Hour, int TIME_Min, int TIME_Sec){
-  if(SD.exists(FileName)){ // check the file is still there
-    // now append new data file
-    sensorData = SD.open(FileName, FILE_WRITE);
-    if (sensorData){
-      sensorData.print(VAR_Index);
-      sensorData.print(';');
-      sensorData.print(TIME_Hour);
-      sensorData.print(':');
-      sensorData.print(TIME_Min);
-      sensorData.print(':');
-      sensorData.print(TIME_Sec);
-      sensorData.print(';');
-      sensorData.print(VAR_Temperature);
-      sensorData.print(';');
-      sensorData.print(VAR_Humidity);
-      sensorData.print(';');
-      sensorData.print(VAR_PM_10);
-      sensorData.print(';');
-      sensorData.print(VAR_PM_2_5);
-      sensorData.print(';');
-      sensorData.println(VAR_PM_1);
-      sensorData.close(); // close the file
-    }
-  }
-  else{
-    Serial.println("Error writing to file !");
-  }
+	if(SD.exists(FileName)) // check the file is still there
+	{ 
+		// now append new data file
+		sensorData = SD.open(FileName, FILE_WRITE);
+		if (sensorData)
+		{
+			sensorData.print(VAR_Index);
+			sensorData.print(';');
+			sensorData.print(TIME_Hour);
+			sensorData.print(':');
+			sensorData.print(TIME_Min);
+			sensorData.print(':');
+			sensorData.print(TIME_Sec);
+			sensorData.print(';');
+			sensorData.print(VAR_Temperature);
+			sensorData.print(';');
+			sensorData.print(VAR_Humidity);
+			sensorData.print(';');
+			sensorData.print(VAR_PM_10);
+			sensorData.print(';');
+			sensorData.print(VAR_PM_2_5);
+			sensorData.print(';');
+			sensorData.println(VAR_PM_1);
+			sensorData.close(); // close the file
+		}
+	}
+	else{
+		Serial.println("Error writing to file !");
+	}
 }
 
 
@@ -458,13 +448,13 @@ void OLED_ASYNC_display_Startup_Bar()
 	display.fillRect(19,48,90,5,WHITE);
 	display.fillRect(18,49,92,3,WHITE);
 	display.fillRect(19,49,90,3,BLACK);
-  display.display();
+	display.display();
 }
 
 void OLED_ASYNC_display_Startup_Bar_Fill(int percentage)
 {
 	display.drawFastHLine(20,50,int(float(percentage)/100.0*88.0),WHITE);
-  display.display();
+	display.display();
 }
 
 //█▀█ █░░ █▀▀ █▀▄   █░█ █
@@ -491,11 +481,11 @@ void OLED_ASYNC_display_save_icon(int x, int y)
 	display.drawFastHLine(x+1,y+1,6,WHITE); // Top Outline
 	display.drawFastVLine(x,y+2,5,WHITE); // Left Outline
 	display.drawFastVLine(x+7,y+2,5,WHITE); // Right Outline
-	
+
 	display.drawFastVLine(x+2,y+4,3,WHITE); // Left Faceline
 	display.drawFastVLine(x+5,y+4,3,WHITE); // Right Faceline
 	display.drawFastHLine(x+2,y+4,3,WHITE); // Top Faceline
-	
+
 	display.drawPixel(x+2,y+1,WHITE);
 	display.drawPixel(x+3,y+2,WHITE);
 	display.drawPixel(x+4,y+2,WHITE);
@@ -513,23 +503,23 @@ void OLED_ASYNC_display_clock(int TIME_Hour, int TIME_Min, int TIME_Sec)
 //draws the current clock
 {
 	display.fillRect(41,4,49,10,BLACK); // black out current clock
-	
+
 	display.setCursor(41,4);
 	display.setTextColor(WHITE);
-  if(TIME_Hour<10)
-  {
-    display.print('0');
-  }
-  display.print(String(TIME_Hour)+':');
-  if(TIME_Min<10)
-  {
-    display.print('0');
-  }
-  display.print(String(TIME_Min)+':');
-  if(TIME_Sec<10)
-  {
-    display.print('0');
-  }
+	if(TIME_Hour<10)
+	{
+		display.print('0');
+	}
+	display.print(String(TIME_Hour)+':');
+	if(TIME_Min<10)
+	{
+		display.print('0');
+	}
+	display.print(String(TIME_Min)+':');
+	if(TIME_Sec<10)
+	{
+		display.print('0');
+	}
 	display.print(TIME_Sec);
 	display.display();
 }
@@ -558,16 +548,6 @@ void OLED_ASYNC_remove_OPC_update_icon(int x, int y)
 	display.display();
 }
 
-void OLED_ASYNC_display_Temperature()
-{
-	
-}
-
-void OLED_ASYNC_display_Humidity()
-{
-	
-}
-
 void OLED_ASYNC_display_Elapsed_Time()
 {
 	unsigned long currentMillis = millis();
@@ -579,13 +559,13 @@ void OLED_ASYNC_display_Elapsed_Time()
 	seconds %= 60;
 	minutes %= 60;
 	hours %= 24;
-	
+
 	//Fill the previously written pixels with Black
 	display.fillRect(80,41,48,7,BLACK);
-	
+
 	display.setCursor(80,41);
 	//if minutes<10 then print a 0?
-	
+
 	display.print("E ");
 	display.print(hours);
 	display.print("h ");
@@ -610,12 +590,12 @@ void OLED_ASYNC_display_HUM_and_TMP(float temperature, int humidity)
 	display.print("T ");
 	display.print(temperature, 1);
 	display.print(" C");
-	
+
 	display.setCursor(80,31);
 	display.print("H ");
 	display.print(humidity);
 	display.print("%");
-	
+
 	display.display();
 }
 
@@ -628,14 +608,14 @@ void OLED_ASYNC_display_PM_values(float PM_10 ,float PM_2_5, float PM_1)
 	display.setCursor(8,21);
 	display.print(PM_10,1);
 	display.print("ug/m3");
-	
+
 	display.setCursor(8,31);
 	display.print(PM_2_5,1);
 	display.print("ug/m3");
-	
+
 	display.setCursor(8,41);
 	display.print(PM_1,1);
 	display.print("ug/m3");
-	
+
 	display.display();
 }
