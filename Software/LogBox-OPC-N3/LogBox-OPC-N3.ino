@@ -48,6 +48,7 @@ SOFTWARE.
 #include <splash.h>
 
 //OPC-N3 Aerosol Sensor | by github
+//Currently not implemented
 //#include <OPCN3.h>
 
 //SD Card SPI Reader | by Arduino
@@ -58,6 +59,7 @@ SOFTWARE.
 //█▄▀ ██▄ █▄▄ █▄▄ █▀█ █▀▄ █▀█ ░█░ █ █▄█ █░▀█ ▄█
 
 //Pins
+//Empty | Reserverd for UTIL Pins
 
 //RTC
 RtcDS3231<TwoWire> Rtc(Wire);
@@ -113,13 +115,13 @@ unsigned long TIME_last_SD_save;
 unsigned long TIME_last_display_update;
 unsigned long TIME_last_RTC_update;
 unsigned long TIME_last_OPC_readout;
-
 unsigned long TIME_measurement_start;
 
-int INTERVAL_SD_Save = 			5000; 			// Determines the Interval in which measurements are taken / in miliseconds 5000ms recommended
-int INTERVAL_Display_Update = 	200;			// Determines the Interval in which Display is updated / in miliseconds 200ms recommended
-int INTERVAL_RTC_Update = 		200;			// Determines the Interval in which RTC is updated / in miliseconds 200ms recommended
-int INTERVAL_OPC_Readout = 		2000;			// Determines the Interval in which OPC is updated / in miliseconds 2000ms recommended
+//Timer Intervals in ms
+int INTERVAL_SD_Save 		= 	5000; 			// Determines the Interval in which measurements are taken / 	in miliseconds 5000ms recommended
+int INTERVAL_Display_Update 	= 	200;			// Determines the Interval in which Display is updated / 	in miliseconds 200ms recommended
+int INTERVAL_RTC_Update 	= 	200;			// Determines the Interval in which RTC is updated / 		in miliseconds 200ms recommended
+int INTERVAL_OPC_Readout 	= 	2000;			// Determines the Interval in which OPC is updated / 		in miliseconds 2000ms recommended
 
 //------------------------------------------//
 //░██████╗███████╗████████╗██╗░░░██╗██████╗░//
@@ -131,7 +133,13 @@ int INTERVAL_OPC_Readout = 		2000;			// Determines the Interval in which OPC is 
 //------------------------------------------//
 
 void setup() {
-
+	// Begin of Script
+	//Errorcodes
+	// 0x1x SD Card
+	// 0x2x Display
+	// 0x3x
+	// 0x4x
+	
 	//initialize OLED Display
 	// SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
 	if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
@@ -145,13 +153,15 @@ void setup() {
 	//Serial
 	Serial.begin(115200);
 	delay(random(50,150));
-
+	
+	//Only the logo
 	OLED_ASYNC_display_Startup_Logo();
 	delay(random(1000,2000));
-
+	
+	//Initialize the Status bar
 	OLED_ASYNC_display_Startup_Bar();
 	delay(random(1500,2500));
-
+	
 	OLED_ASYNC_display_Startup_Bar_Fill(random(2,8));
 	delay(random(50,300));
 
@@ -177,14 +187,14 @@ void setup() {
 	TIME_Min = now.Minute();
 	TIME_Sec = now.Second();
 
-	//Prep the Filename
+	//Prepare the Filename
 	TMonth = String(TIME_Month);
 	TDay = String(TIME_Day);
 	THour = String(TIME_Hour);
 	TMin = String(TIME_Min);
 	TSec = String(TIME_Sec);
 
-
+	//Append zeroes to Month, Day, etc, if neccescary
 	if(TIME_Month<10)
 	{
 		TMonth = '0' + String(TIME_Month);
@@ -206,7 +216,7 @@ void setup() {
 		TSec = '0' + String(TIME_Sec);
 	}
 	//Create Filename
-	FileName = String(TIME_Year) + '-' + TMonth + '-' + TDay + 'T' + THour + '-' + TMin + '-' + TSec + "+01-00.csv";
+	FileName = String(TIME_Year) + '-' + TMonth + '-' + TDay + 'T' + THour + '-' + TMin + '-' + TSec + ".csv";
 
 	OLED_ASYNC_display_Startup_Bar_Fill(random(25,35));
 	delay(random(250,750));
@@ -227,7 +237,7 @@ void setup() {
 		// don't do anything more:
 		for(;;);
 	}
-	Serial.println("card initialized.");
+	Serial.println("SD Card initialized.");
 	//Write new File
 
 	sensorData = SD.open(FileName, FILE_WRITE);
@@ -241,7 +251,7 @@ void setup() {
 	sensorData = SD.open(FileName, FILE_WRITE);
 	if (sensorData) {
 		//Write csv header
-		sensorData.println("DATE;INDEX;PM10");
+		sensorData.println("DATE;TIME;INDEX;TEMPERATURE;HUMIDITY;PM10;PM2.5;PM1");
 		// close the file:
 		sensorData.close();
 		Serial.print("New File Created: ");
@@ -258,9 +268,6 @@ void setup() {
 	display.display();
 	delay(random(150,450));
 
-
-
-
 	//get the measurement since the start
 	TIME_measurement_start = millis();
 
@@ -269,7 +276,6 @@ void setup() {
 	TIME_last_display_update = millis();
 	TIME_last_RTC_update = millis();
 	TIME_last_OPC_readout = millis();
-
 
 }
 
@@ -413,15 +419,15 @@ void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Tempera
 			sensorData.print(':');
 			sensorData.print(TIME_Sec);
 			sensorData.print(';');
-			sensorData.print(VAR_Temperature);
+			sensorData.print(VAR_Temperature); // Maybe replace . with ,
 			sensorData.print(';');
-			sensorData.print(VAR_Humidity);
+			sensorData.print(VAR_Humidity); // Maybe replace . with ,
 			sensorData.print(';');
-			sensorData.print(VAR_PM_10);
+			sensorData.print(VAR_PM_10); // Maybe replace . with ,
 			sensorData.print(';');
-			sensorData.print(VAR_PM_2_5);
+			sensorData.print(VAR_PM_2_5); // Maybe replace . with ,
 			sensorData.print(';');
-			sensorData.println(VAR_PM_1);
+			sensorData.println(VAR_PM_1); // Maybe replace . with ,
 			sensorData.close(); // close the file
 		}
 	}
