@@ -72,10 +72,10 @@ RtcDS3231<TwoWire> Rtc(Wire);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 //OPC-N3
-//OPCN3 myOPCN3(15); // SS PIN in constructor OK
+//OPCN3 myOPCN3(15); // SS PIN in constructor
 
 //SD Card Reader
-const int CSpin = 16; //CS PIN SD CARD OK
+const int CSpin = 16; //CS PIN SD CARD
 File sensorData;
 
 
@@ -99,6 +99,7 @@ int TIME_Min = 0;
 int TIME_Sec = 0;
 
 //File name
+String IDevice = "G0X";
 String TMonth = "";
 String TDay = "";
 String THour = "";
@@ -140,6 +141,10 @@ void setup() {
 	// 0x3x
 	// 0x4x
 	
+	// Begin Serial Comms
+	Serial.begin(115200);
+	delay(random(50,150));
+	
 	//initialize OLED Display
 	// SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
 	if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
@@ -151,8 +156,7 @@ void setup() {
 	display.display();
 
 	//Serial
-	Serial.begin(115200);
-	delay(random(50,150));
+	
 	
 	//Only the logo
 	OLED_ASYNC_display_Startup_Logo();
@@ -165,7 +169,7 @@ void setup() {
 	OLED_ASYNC_display_Startup_Bar_Fill(random(2,8));
 	delay(random(50,300));
 
-	Serial.print("compiled: ");
+	Serial.print(F("compiled: "));
 	Serial.print(__DATE__);
 	Serial.println(__TIME__);
 
@@ -216,7 +220,7 @@ void setup() {
 		TSec = '0' + String(TIME_Sec);
 	}
 	//Create Filename
-	FileName = String(TIME_Year) + '-' + TMonth + '-' + TDay + 'T' + THour + '-' + TMin + '-' + TSec + ".csv";
+	FileName = IDevice + '_' + String(TIME_Year) + '-' + TMonth + '-' + TDay + 'T' + THour + '-' + TMin + '-' + TSec + ".csv";
 
 	OLED_ASYNC_display_Startup_Bar_Fill(random(25,35));
 	delay(random(250,750));
@@ -225,7 +229,7 @@ void setup() {
 	// turn on laser, fan and set high gain, use delay to make sure it is setup proper.
 	delay(50);
 	//myOPCN3.initialize();
-	delay(1000);
+	delay(500);
 
 	OLED_ASYNC_display_Startup_Bar_Fill(random(45,65));
 	delay(random(500,1000));
@@ -233,11 +237,11 @@ void setup() {
 	//Initialize SD CARD
 	pinMode(CSpin, OUTPUT);
 	if (!SD.begin(CSpin)) {
-		Serial.println("FATAL ERROR 0x1A - SD-Card failed, or not present");
+		Serial.println(F("FATAL ERROR 0x1A - SD-Card failed, or not present"));
 		// don't do anything more:
 		for(;;);
 	}
-	Serial.println("SD Card initialized.");
+	Serial.println(F("SD Card initialized."));
 	//Write new File
 
 	sensorData = SD.open(FileName, FILE_WRITE);
@@ -254,10 +258,10 @@ void setup() {
 		sensorData.println("DATE;TIME;INDEX;TEMPERATURE;HUMIDITY;PM10;PM2.5;PM1");
 		// close the file:
 		sensorData.close();
-		Serial.print("New File Created: ");
+		Serial.print(F("New File Created: "));
 		Serial.println(FileName);
 	} else {
-		Serial.println("FATAL ERROR 0x1B - Cannot write to new File");
+		Serial.println(F("FATAL ERROR 0x1B - Cannot write to new File"));
 		for(;;);
 	}
 
@@ -276,6 +280,8 @@ void setup() {
 	TIME_last_display_update = millis();
 	TIME_last_RTC_update = millis();
 	TIME_last_OPC_readout = millis();
+	
+	Serial.println(F("Timers set, Setup complete"))
 
 }
 
@@ -334,9 +340,12 @@ void loop() {
 		//UPDATE OPC
 		TIME_last_OPC_readout = millis() - (millis() - TIME_last_OPC_readout - INTERVAL_OPC_Readout);
 		OLED_ASYNC_display_OPC_update_icon(15,3);
-		// TODO: Implement Measurement
+		// TODO: Implement Measurement for OPC
+		
+		//PLACEHOLDER, MEASURES DEVICE INTERNAL TEMPERAURE
 		RtcTemperature temp = Rtc.GetTemperature();
 		VAR_Temperature = temp.AsFloatDegC();
+		
 		VAR_PM_10 = 124.3;
 		VAR_PM_2_5 = 234.8;
 		VAR_PM_1 = 34.5;
@@ -353,7 +362,6 @@ void loop() {
 		TIME_last_SD_save = millis() - (millis() - TIME_last_SD_save - INTERVAL_SD_Save);
 
 		OLED_ASYNC_display_save_icon(3,3);
-		//TODO, IMPLEMENT SAVING
 		saveData(sensorData, FileName, VAR_Index, VAR_Temperature, VAR_PM_10, VAR_PM_2_5, VAR_PM_1, TIME_Hour, TIME_Min, TIME_Sec);
 		VAR_Index = VAR_Index + 1;
 		delay(100);
@@ -406,18 +414,21 @@ void loop() {
 
 void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Temperature, float VAR_PM_10, float VAR_PM_2_5, float VAR_PM_1, int TIME_Hour, int TIME_Min, int TIME_Sec){
 	if(SD.exists(FileName)) // check the file is still there
+	//sensorData.println("DATE;TIME;INDEX;TEMPERATURE;HUMIDITY;PM10;PM2.5;PM1");
 	{ 
 		// now append new data file
 		sensorData = SD.open(FileName, FILE_WRITE);
 		if (sensorData)
 		{
-			sensorData.print(VAR_Index);
-			sensorData.print(';');
+			//Write to SD Card
+			//sensorData.print(DATE); //STILL TODO
 			sensorData.print(TIME_Hour);
 			sensorData.print(':');
 			sensorData.print(TIME_Min);
 			sensorData.print(':');
 			sensorData.print(TIME_Sec);
+			sensorData.print(';');
+			sensorData.print(VAR_Index);
 			sensorData.print(';');
 			sensorData.print(VAR_Temperature); // Maybe replace . with ,
 			sensorData.print(';');
@@ -429,10 +440,31 @@ void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Tempera
 			sensorData.print(';');
 			sensorData.println(VAR_PM_1); // Maybe replace . with ,
 			sensorData.close(); // close the file
+			
+			//Print on Console
+			//Serial.print(DATE); //STILL TODO
+			Serial.print(VAR_Index);
+			Serial.print(';');
+			Serial.print(TIME_Hour);
+			Serial.print(':');
+			Serial.print(TIME_Min);
+			Serial.print(':');
+			Serial.print(TIME_Sec);
+			Serial.print(';');
+			Serial.print(VAR_Temperature); // Maybe replace . with ,
+			Serial.print(';');
+			Serial.print(VAR_Humidity); // Maybe replace . with ,
+			Serial.print(';');
+			Serial.print(VAR_PM_10); // Maybe replace . with ,
+			Serial.print(';');
+			Serial.print(VAR_PM_2_5); // Maybe replace . with ,
+			Serial.print(';');
+			Serial.println(VAR_PM_1); // Maybe replace . with ,
 		}
 	}
 	else{
-		Serial.println("Error writing to file !");
+		Serial.println("0x1A - Error writing to file !");
+		//TODO ADD ALERT
 	}
 }
 
