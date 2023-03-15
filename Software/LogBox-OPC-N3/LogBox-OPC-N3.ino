@@ -281,7 +281,7 @@ void setup() {
 	TIME_last_RTC_update = millis();
 	TIME_last_OPC_readout = millis();
 	
-	Serial.println(F("Timers set, Setup complete"))
+	Serial.println(F("Timers set, Setup complete"));
 
 }
 
@@ -324,6 +324,7 @@ void loop() {
 		//Upper Part
 		OLED_ASYNC_display_divider();
 		OLED_ASYNC_display_clock(TIME_Hour,TIME_Min,TIME_Sec);
+    OLED_ASYNC_display_HBRS_Logo_top_right();
 
 		//Lower Part
 		OLED_ASYNC_display_Identifier();
