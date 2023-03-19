@@ -48,8 +48,7 @@ SOFTWARE.
 #include <splash.h>
 
 //OPC-N3 Aerosol Sensor | by github
-//Currently not implemented
-//#include <OPCN3.h>
+#include <OPCN3.h>
 
 //SD Card SPI Reader | by Arduino
 #include <SD.h>
@@ -72,7 +71,7 @@ RtcDS3231<TwoWire> Rtc(Wire);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 //OPC-N3
-//OPCN3 myOPCN3(15); // SS PIN in constructor
+OPCN3 myOPCN3(15); // SS PIN in constructor
 
 //SD Card Reader
 const int CSpin = 16; //CS PIN SD CARD
@@ -99,7 +98,7 @@ int TIME_Min = 0;
 int TIME_Sec = 0;
 
 //File name
-String IDevice = "G0X";
+String IDevice = "G0X"; // Change for Device Name
 String TMonth = "";
 String TDay = "";
 String THour = "";
@@ -228,7 +227,7 @@ void setup() {
 	//initialize OPC-N3
 	// turn on laser, fan and set high gain, use delay to make sure it is setup proper.
 	delay(50);
-	//myOPCN3.initialize();
+	myOPCN3.initialize();
 	delay(500);
 
 	OLED_ASYNC_display_Startup_Bar_Fill(random(45,65));
@@ -324,15 +323,15 @@ void loop() {
 		//Upper Part
 		OLED_ASYNC_display_divider();
 		OLED_ASYNC_display_clock(TIME_Hour,TIME_Min,TIME_Sec);
-    OLED_ASYNC_display_HBRS_Logo_top_right();
+		OLED_ASYNC_display_HBRS_Logo_top_right();
 
 		//Lower Part
 		OLED_ASYNC_display_Identifier();
 		OLED_ASYNC_display_vertical_divider();
 
 		OLED_ASYNC_display_Elapsed_Time();
-		OLED_ASYNC_display_HUM_and_TMP(24.46,54);
-		OLED_ASYNC_display_PM_values(24.54,12.56,5.654);
+		OLED_ASYNC_display_HUM_and_TMP(VAR_Temperature,54);
+		OLED_ASYNC_display_PM_values(VAR_PM_10,VAR_PM_2_5,VAR_PM_1);
 	}
 
 	//Check for OPC Readout
@@ -341,16 +340,16 @@ void loop() {
 		//UPDATE OPC
 		TIME_last_OPC_readout = millis() - (millis() - TIME_last_OPC_readout - INTERVAL_OPC_Readout);
 		OLED_ASYNC_display_OPC_update_icon(15,3);
-		// TODO: Implement Measurement for OPC
 		
-		//PLACEHOLDER, MEASURES DEVICE INTERNAL TEMPERAURE
-		RtcTemperature temp = Rtc.GetTemperature();
-		VAR_Temperature = temp.AsFloatDegC();
+		//OPC readout:
+		HistogramData hist = myOPCN3.readHistogramData();
 		
-		VAR_PM_10 = 124.3;
-		VAR_PM_2_5 = 234.8;
-		VAR_PM_1 = 34.5;
-
+		VAR_Temperature = hist.getTempC();
+		
+		VAR_PM_10 = hist.pm10;
+		VAR_PM_2_5 = hist.pm2_5;
+		VAR_PM_1 = hist.pm1;
+		
 		delay(100);
 		OLED_ASYNC_remove_OPC_update_icon(15,3);
 
