@@ -345,6 +345,7 @@ void loop() {
 		
 		//OPC readout:
     SPI.setClockDivider(SPI_CLOCK_DIV32);
+    SPI.setDataMode(SPI_MODE1);
 		HistogramData hist = myOPCN3.readHistogramData();
 		
 		VAR_Temperature = hist.getTempC();
@@ -361,6 +362,7 @@ void loop() {
 	//Check for SD Card save
 	if(millis() - TIME_last_SD_save > INTERVAL_SD_Save)
 	{
+		SPI.setDataMode(SPI_MODE0);
 		//UPDATE SD card
 		TIME_last_SD_save = millis() - (millis() - TIME_last_SD_save - INTERVAL_SD_Save);
 
