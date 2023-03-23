@@ -279,7 +279,9 @@ void setup() {
 	TIME_last_display_update = millis();
 	TIME_last_RTC_update = millis();
 	TIME_last_OPC_readout = millis();
-	
+
+
+  SPI.setClockDivider(SPI_CLOCK_DIV32);
 	Serial.println(F("Timers set, Setup complete"));
 
 }
@@ -342,6 +344,7 @@ void loop() {
 		OLED_ASYNC_display_OPC_update_icon(15,3);
 		
 		//OPC readout:
+    SPI.setClockDivider(SPI_CLOCK_DIV32);
 		HistogramData hist = myOPCN3.readHistogramData();
 		
 		VAR_Temperature = hist.getTempC();
