@@ -106,6 +106,7 @@ String TMin = "";
 String TSec = "";
 String FileName = "";
 
+bool FLAG_new_file = false;
 
 //Measurement index count
 int VAR_Index = 0;
@@ -344,8 +345,8 @@ void loop() {
 		OLED_ASYNC_display_OPC_update_icon(15,3);
 		
 		//OPC readout:
-    SPI.setClockDivider(SPI_CLOCK_DIV32);
-    SPI.setDataMode(SPI_MODE1);
+		SPI.setClockDivider(SPI_CLOCK_DIV32);
+		SPI.setDataMode(SPI_MODE1);
 		HistogramData hist = myOPCN3.readHistogramData();
 		
 		VAR_Temperature = hist.getTempC();
@@ -369,36 +370,68 @@ void loop() {
 		OLED_ASYNC_display_save_icon(3,3);
 		saveData(sensorData, FileName, VAR_Index, VAR_Temperature, VAR_PM_10, VAR_PM_2_5, VAR_PM_1, TIME_Hour, TIME_Min, TIME_Sec);
 		VAR_Index = VAR_Index + 1;
+		
+		if( (VAR_Index % 25000 == 0) && (VAR_Index != 0) )
+		{
+			//Schedule creation of new File every 25000 entries
+			FLAG_new_file = true;
+		}
 		delay(100);
 		OLED_ASYNC_remove_save_icon(3,3);
 	}
+	
+	if(FLAG_new_file == true)
+	{
+		FLAG_new_file = false;
+		
+		//Create new File
+		//Prepare the Filename
+		TMonth = String(TIME_Month);
+		TDay = String(TIME_Day);
+		THour = String(TIME_Hour);
+		TMin = String(TIME_Min);
+		TSec = String(TIME_Sec);
 
+		//Append zeroes to Month, Day, etc, if neccescary
+		if(TIME_Month<10)
+		{
+			TMonth = '0' + String(TIME_Month);
+		}
+		if(TIME_Day<10)
+		{
+			TDay = '0' + String(TIME_Day);
+		}
+		if(TIME_Hour<10)
+		{
+			THour = '0' + String(TIME_Hour);
+		}
+		if(TIME_Min<10)
+		{
+			TMin = '0' + String(TIME_Min);
+		}
+		if(TIME_Sec<10)
+		{
+			TSec = '0' + String(TIME_Sec);
+		}
+		//Create Filename
+		FileName = IDevice + '_' + String(TIME_Year) + '-' + TMonth + '-' + TDay + 'T' + THour + '-' + TMin + '-' + TSec + ".csv";
+		
+		sensorData = SD.open(FileName, FILE_WRITE);
+		sensorData.close();  //Closing the file
 
-	//OPC INITIALIZE
-	/*HistogramData hist = myOPCN3.readHistogramData();
-
-	// Get Temperature
-	Serial.print("Temperature: ");
-	VAR_Temperature = hist.getTempC();
-	Serial.println(VAR_Temperature);
-
-
-	// Get PM values
-	Serial.print("PM 10: ");
-	VAR_PM_10 = hist.pm10;
-	Serial.println(VAR_PM_10);
-
-	// Get PM values
-	Serial.print("PM 2.5: ");
-	VAR_PM_2_5 = hist.pm2_5;
-	Serial.println(VAR_PM_2_5);
-
-	// Get PM values
-	Serial.print("PM 1: ");
-	VAR_PM_1 = hist.pm1;
-	Serial.println(VAR_PM_1);
-	*/
-
+		sensorData = SD.open(FileName, FILE_WRITE);
+		if (sensorData) {
+			//Write csv header
+			sensorData.println("DATE;TIME;INDEX;TEMPERATURE;HUMIDITY;PM10;PM2.5;PM1");
+			// close the file:
+			sensorData.close();
+			Serial.print(F("New File Created: "));
+			Serial.println(FileName);
+		} else {
+			Serial.println(F("FATAL ERROR 0x1B - Cannot write to new File"));
+			for(;;);
+		}
+	}
 
 }
 
