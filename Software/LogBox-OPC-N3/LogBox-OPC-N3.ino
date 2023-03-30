@@ -459,6 +459,7 @@ void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Tempera
 		if (sensorData)
 		{
 			//Write to SD Card
+			
 			//sensorData.print(DATE); //STILL TODO
 			sensorData.print(TIME_Hour);
 			sensorData.print(':');
@@ -477,6 +478,7 @@ void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Tempera
 			sensorData.print(VAR_PM_2_5); // Maybe replace . with ,
 			sensorData.print(';');
 			sensorData.println(VAR_PM_1); // Maybe replace . with ,
+			//sensorData.println(HISTOGRAM); // STILL TODO
 			sensorData.close(); // close the file
 			
 			//Print on Console
