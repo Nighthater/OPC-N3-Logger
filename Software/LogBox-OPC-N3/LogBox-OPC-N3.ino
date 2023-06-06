@@ -100,7 +100,7 @@ int TIME_Min = 0;
 int TIME_Sec = 0;
 
 //File name
-String IDevice = "G02"; // Change for Device Name //------------------------------------------------------------------------------------------------------- CUSTOMIZED
+String IDevice = "G03"; // Change for Device Name //------------------------------------------------------------------------------------------------------- CUSTOMIZED
 String TMonth = "";
 String TDay = "";
 String THour = "";
@@ -399,7 +399,7 @@ void loop() {
 		saveData(sensorData, FileName, VAR_Index, VAR_Temperature, VAR_PM_10, VAR_PM_2_5, VAR_PM_1, TIME_Hour, TIME_Min, TIME_Sec, VAR_BINS);
 		VAR_Index = VAR_Index + 1;
 		
-		if( (VAR_Index % 17280 == 0) && (VAR_Index != 0) )
+		if( (VAR_Index % 17280 == 0) && (VAR_Index != 0) ) //Since VAR_Index is a int it can only reach up to ~32k until it flips into the negative
 		{
 			//Schedule creation of new File every 17280 entries (24 h)
 			FLAG_new_file = true;
