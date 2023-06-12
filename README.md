@@ -1,4 +1,4 @@
-# OPC-N3 Aerosol Sensor LogBox
+# OPC-N3 Aerosol Sensor Logger
 
 This Logger records the measured data of an OPC-N3 Aerosol sensor every 5 seconds. The measured interval is 2.5sec long.  
 It works fully automatic and begins recording when connected with power and needs no further oversight.
