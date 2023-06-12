@@ -6,9 +6,10 @@ It works fully automatic and begins recording when connected with power and need
 ## Images
 
 ![](device_render.png)
+Render of the Logger  
 
 ![](device_field.png)
-
+Logger in the field  
 ### Size:
   LogBox M (120x120x45mm)  
   5V/300mA  
