@@ -88,6 +88,8 @@ float VAR_PM_10 = 0.0;
 float VAR_PM_2_5 = 0.0;
 float VAR_PM_1 = 0.0;
 
+uint16_t VAR_BINS[24];
+
 
 //Current Times
 int TIME_Year = 0;
@@ -98,7 +100,7 @@ int TIME_Min = 0;
 int TIME_Sec = 0;
 
 //File name
-String IDevice = "G0X"; // Change for Device Name
+String IDevice = "G03"; // Change for Device Name //------------------------------------------------------------------------------------------------------- CUSTOMIZED
 String TMonth = "";
 String TDay = "";
 String THour = "";
@@ -106,6 +108,7 @@ String TMin = "";
 String TSec = "";
 String FileName = "";
 
+bool FLAG_new_file = false;
 
 //Measurement index count
 int VAR_Index = 0;
@@ -254,7 +257,7 @@ void setup() {
 	sensorData = SD.open(FileName, FILE_WRITE);
 	if (sensorData) {
 		//Write csv header
-		sensorData.println("DATE;TIME;INDEX;TEMPERATURE;HUMIDITY;PM10;PM2.5;PM1");
+		sensorData.println("TIME;INDEX;TEMPERATURE;HUMIDITY;PM10;PM2.5;PM1;BIN0;BIN1;BIN2;BIN3;BIN4;BIN5;BIN6;BIN7;BIN8;BIN9;BIN10;BIN11;BIN12;BIN13;BIN14;BIN15;BIN16;BIN17;BIN18;BIN19;BIN20;BIN21;BIN22;BIN23");
 		// close the file:
 		sensorData.close();
 		Serial.print(F("New File Created: "));
@@ -328,11 +331,11 @@ void loop() {
 		OLED_ASYNC_display_HBRS_Logo_top_right();
 
 		//Lower Part
-		OLED_ASYNC_display_Identifier();
+		OLED_ASYNC_display_Identifier(IDevice);
 		OLED_ASYNC_display_vertical_divider();
 
 		OLED_ASYNC_display_Elapsed_Time();
-		OLED_ASYNC_display_HUM_and_TMP(VAR_Temperature,54);
+		OLED_ASYNC_display_HUM_and_TMP(VAR_Temperature,int(VAR_Humidity));
 		OLED_ASYNC_display_PM_values(VAR_PM_10,VAR_PM_2_5,VAR_PM_1);
 	}
 
@@ -344,15 +347,41 @@ void loop() {
 		OLED_ASYNC_display_OPC_update_icon(15,3);
 		
 		//OPC readout:
-    SPI.setClockDivider(SPI_CLOCK_DIV32);
-    SPI.setDataMode(SPI_MODE1);
+		SPI.setClockDivider(SPI_CLOCK_DIV32);
+		SPI.setDataMode(SPI_MODE1);
 		HistogramData hist = myOPCN3.readHistogramData();
 		
 		VAR_Temperature = hist.getTempC();
+    VAR_Humidity = hist.getHumidity();
 		
 		VAR_PM_10 = hist.pm10;
 		VAR_PM_2_5 = hist.pm2_5;
 		VAR_PM_1 = hist.pm1;
+
+    VAR_BINS[0] = hist.binCount0;
+    VAR_BINS[1] = hist.binCount1;
+    VAR_BINS[2] = hist.binCount2;
+    VAR_BINS[3] = hist.binCount3;
+    VAR_BINS[4] = hist.binCount4;
+    VAR_BINS[5] = hist.binCount5;
+    VAR_BINS[6] = hist.binCount6;
+    VAR_BINS[7] = hist.binCount7;
+    VAR_BINS[8] = hist.binCount8;
+    VAR_BINS[9] = hist.binCount9;
+    VAR_BINS[10] = hist.binCount10;
+    VAR_BINS[11] = hist.binCount11;
+    VAR_BINS[12] = hist.binCount12;
+    VAR_BINS[13] = hist.binCount13;
+    VAR_BINS[14] = hist.binCount14;
+    VAR_BINS[15] = hist.binCount15;
+    VAR_BINS[16] = hist.binCount16;
+    VAR_BINS[17] = hist.binCount17;
+    VAR_BINS[18] = hist.binCount18;
+    VAR_BINS[19] = hist.binCount19;
+    VAR_BINS[20] = hist.binCount20;
+    VAR_BINS[21] = hist.binCount21;
+    VAR_BINS[22] = hist.binCount22;
+    VAR_BINS[23] = hist.binCount23;
 		
 		delay(100);
 		OLED_ASYNC_remove_OPC_update_icon(15,3);
@@ -367,38 +396,70 @@ void loop() {
 		TIME_last_SD_save = millis() - (millis() - TIME_last_SD_save - INTERVAL_SD_Save);
 
 		OLED_ASYNC_display_save_icon(3,3);
-		saveData(sensorData, FileName, VAR_Index, VAR_Temperature, VAR_PM_10, VAR_PM_2_5, VAR_PM_1, TIME_Hour, TIME_Min, TIME_Sec);
+		saveData(sensorData, FileName, VAR_Index, VAR_Temperature, VAR_PM_10, VAR_PM_2_5, VAR_PM_1, TIME_Hour, TIME_Min, TIME_Sec, VAR_BINS);
 		VAR_Index = VAR_Index + 1;
+		
+		if( (VAR_Index % 17280 == 0) && (VAR_Index != 0) ) //Since VAR_Index is a int it can only reach up to ~32k until it flips into the negative
+		{
+			//Schedule creation of new File every 17280 entries (24 h)
+			FLAG_new_file = true;
+		}
 		delay(100);
 		OLED_ASYNC_remove_save_icon(3,3);
 	}
+	
+	if(FLAG_new_file == true)
+	{
+		FLAG_new_file = false;
+		
+		//Create new File
+		//Prepare the Filename
+		TMonth = String(TIME_Month);
+		TDay = String(TIME_Day);
+		THour = String(TIME_Hour);
+		TMin = String(TIME_Min);
+		TSec = String(TIME_Sec);
 
+		//Append zeroes to Month, Day, etc, if neccescary
+		if(TIME_Month<10)
+		{
+			TMonth = '0' + String(TIME_Month);
+		}
+		if(TIME_Day<10)
+		{
+			TDay = '0' + String(TIME_Day);
+		}
+		if(TIME_Hour<10)
+		{
+			THour = '0' + String(TIME_Hour);
+		}
+		if(TIME_Min<10)
+		{
+			TMin = '0' + String(TIME_Min);
+		}
+		if(TIME_Sec<10)
+		{
+			TSec = '0' + String(TIME_Sec);
+		}
+		//Create Filename
+		FileName = IDevice + '_' + String(TIME_Year) + '-' + TMonth + '-' + TDay + 'T' + THour + '-' + TMin + '-' + TSec + ".csv";
+		
+		sensorData = SD.open(FileName, FILE_WRITE);
+		sensorData.close();  //Closing the file
 
-	//OPC INITIALIZE
-	/*HistogramData hist = myOPCN3.readHistogramData();
-
-	// Get Temperature
-	Serial.print("Temperature: ");
-	VAR_Temperature = hist.getTempC();
-	Serial.println(VAR_Temperature);
-
-
-	// Get PM values
-	Serial.print("PM 10: ");
-	VAR_PM_10 = hist.pm10;
-	Serial.println(VAR_PM_10);
-
-	// Get PM values
-	Serial.print("PM 2.5: ");
-	VAR_PM_2_5 = hist.pm2_5;
-	Serial.println(VAR_PM_2_5);
-
-	// Get PM values
-	Serial.print("PM 1: ");
-	VAR_PM_1 = hist.pm1;
-	Serial.println(VAR_PM_1);
-	*/
-
+		sensorData = SD.open(FileName, FILE_WRITE);
+		if (sensorData) {
+			//Write csv header
+			sensorData.println("TIME;INDEX;TEMPERATURE;HUMIDITY;PM10;PM2.5;PM1;BIN0;BIN1;BIN2;BIN3;BIN4;BIN5;BIN6;BIN7;BIN8;BIN9;BIN10;BIN11;BIN12;BIN13;BIN14;BIN15;BIN16;BIN17;BIN18;BIN19;BIN20;BIN21;BIN22;BIN23");
+			// close the file:
+			sensorData.close();
+			Serial.print(F("New File Created: "));
+			Serial.println(FileName);
+		} else {
+			Serial.println(F("FATAL ERROR 0x1B - Cannot write to new File"));
+			for(;;);
+		}
+	}
 
 }
 
@@ -417,15 +478,16 @@ void loop() {
 //█▀ █▀▄   █▀▀ ▄▀█ █▀█ █▀▄   █▀ ▄▀█ █░█ █ █▄░█ █▀▀
 //▄█ █▄▀   █▄▄ █▀█ █▀▄ █▄▀   ▄█ █▀█ ▀▄▀ █ █░▀█ █▄█
 
-void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Temperature, float VAR_PM_10, float VAR_PM_2_5, float VAR_PM_1, int TIME_Hour, int TIME_Min, int TIME_Sec){
+void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Temperature, float VAR_PM_10, float VAR_PM_2_5, float VAR_PM_1, int TIME_Hour, int TIME_Min, int TIME_Sec, uint16_t VAR_BINS[24]){
 	if(SD.exists(FileName)) // check the file is still there
-	//sensorData.println("DATE;TIME;INDEX;TEMPERATURE;HUMIDITY;PM10;PM2.5;PM1");
+	//sensorData.println("DATE;TIME;INDEX;TEMPERATURE;HUMIDITY;PM10;PM2.5;PM1;BIN0;BIN1;BIN2;BIN3;BIN4;BIN5;BIN6;BIN7;BIN8;BIN9;BIN10;BIN11;BIN12;BIN13;BIN14;BIN15;BIN16;BIN17;BIN18;BIN19;BIN20;BIN21;BIN22;BIN23");
 	{ 
 		// now append new data file
 		sensorData = SD.open(FileName, FILE_WRITE);
 		if (sensorData)
 		{
 			//Write to SD Card
+			
 			//sensorData.print(DATE); //STILL TODO
 			sensorData.print(TIME_Hour);
 			sensorData.print(':');
@@ -435,15 +497,22 @@ void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Tempera
 			sensorData.print(';');
 			sensorData.print(VAR_Index);
 			sensorData.print(';');
-			sensorData.print(VAR_Temperature); // Maybe replace . with ,
+			sensorData.print(VAR_Temperature,1); // Maybe replace . with ,
 			sensorData.print(';');
-			sensorData.print(VAR_Humidity); // Maybe replace . with ,
+			sensorData.print(float(VAR_Humidity),0); // Maybe replace . with ,
 			sensorData.print(';');
-			sensorData.print(VAR_PM_10); // Maybe replace . with ,
+			sensorData.print(VAR_PM_10,3); // Maybe replace . with ,
 			sensorData.print(';');
-			sensorData.print(VAR_PM_2_5); // Maybe replace . with ,
+			sensorData.print(VAR_PM_2_5,3); // Maybe replace . with ,
 			sensorData.print(';');
-			sensorData.println(VAR_PM_1); // Maybe replace . with ,
+			sensorData.print(VAR_PM_1,3); // Maybe replace . with ,
+      for(int i=0;i<=24;i++)
+      {
+          sensorData.print(';');
+          sensorData.print(VAR_BINS[i]);
+          
+      }
+      sensorData.println(';');
 			sensorData.close(); // close the file
 			
 			//Print on Console
@@ -458,13 +527,20 @@ void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Tempera
 			Serial.print(';');
 			Serial.print(VAR_Temperature); // Maybe replace . with ,
 			Serial.print(';');
-			Serial.print(VAR_Humidity); // Maybe replace . with ,
+			Serial.print(float(VAR_Humidity),0); // Maybe replace . with ,
 			Serial.print(';');
 			Serial.print(VAR_PM_10); // Maybe replace . with ,
 			Serial.print(';');
 			Serial.print(VAR_PM_2_5); // Maybe replace . with ,
 			Serial.print(';');
-			Serial.println(VAR_PM_1); // Maybe replace . with ,
+			Serial.print(VAR_PM_1); // Maybe replace . with ,
+      for(int i=0;i<=24;i++)
+      {
+          Serial.print(';');
+          Serial.print(VAR_BINS[i]);
+          
+      }
+      Serial.println(';');
 		}
 	}
 	else{
@@ -617,11 +693,13 @@ void OLED_ASYNC_display_Elapsed_Time()
 	display.display();
 }
 
-void OLED_ASYNC_display_Identifier()
+void OLED_ASYNC_display_Identifier(String IDevice)
 {
 	display.fillRect(20,54,104,7,BLACK);
 	display.setCursor(20,54);
-	display.print("OPC-N3-HBRS-G1");
+	display.print("OPC-N3-HBRS-");
+  display.print(IDevice);
+
 	display.display();
 }
 
