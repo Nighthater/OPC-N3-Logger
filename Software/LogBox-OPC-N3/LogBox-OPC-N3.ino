@@ -39,18 +39,22 @@ SOFTWARE.
 #include <Wire.h>
 #include <SPI.h>
 
-//RTC | by Makuma
+// RTC | by Makuna
+// https://www.arduino.cc/reference/en/libraries/rtc-by-makuna/
 #include <RtcDS3231.h>
 
-//OLED DISPLAY SSD1306 | by Adafruit
+// OLED DISPLAY SSD1306 | by Adafruit
+// https://www.arduino.cc/reference/en/libraries/adafruit-ssd1306/
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_GFX.h>
 #include <splash.h>
 
-//OPC-N3 Aerosol Sensor | by github
+// OPC-N3 Aerosol Sensor | by marlon360
+// https://github.com/marlon360/opcn3-arduino
 #include <OPCN3.h>
 
-//SD Card SPI Reader | by Arduino
+// SD Card SPI Reader | by Arduino
+// https://www.arduino.cc/reference/en/libraries/sd/
 #include <SD.h>
 
 
