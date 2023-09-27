@@ -732,15 +732,15 @@ void OLED_ASYNC_display_PM_values(float PM_10 ,float PM_2_5, float PM_1)
 
 	display.setCursor(8,21);
 	display.print(PM_10,1);
-	display.print("ug/m3");
+	display.print("cps");
 
 	display.setCursor(8,31);
 	display.print(PM_2_5,1);
-	display.print("ug/m3");
+	display.print("cps");
 
 	display.setCursor(8,41);
 	display.print(PM_1,1);
-	display.print("ug/m3");
+	display.print("cps");
 
 	display.display();
 }
