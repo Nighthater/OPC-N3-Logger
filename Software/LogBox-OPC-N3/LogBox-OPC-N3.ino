@@ -128,7 +128,7 @@ unsigned long TIME_measurement_start;
 int INTERVAL_SD_Save 		= 	5000; 			// Determines the Interval in which measurements are taken / 	in miliseconds 5000ms recommended
 int INTERVAL_Display_Update 	= 	200;			// Determines the Interval in which Display is updated / 	in miliseconds 200ms recommended
 int INTERVAL_RTC_Update 	= 	200;			// Determines the Interval in which RTC is updated / 		in miliseconds 200ms recommended
-int INTERVAL_OPC_Readout 	= 	2000;			// Determines the Interval in which OPC is updated / 		in miliseconds 2000ms recommended
+int INTERVAL_OPC_Readout 	= 	2500;			// Determines the Interval in which OPC is updated / 		in miliseconds 2000ms recommended
 
 //------------------------------------------//
 //░██████╗███████╗████████╗██╗░░░██╗██████╗░//
@@ -732,15 +732,15 @@ void OLED_ASYNC_display_PM_values(float PM_10 ,float PM_2_5, float PM_1)
 
 	display.setCursor(8,21);
 	display.print(PM_10,1);
-	display.print("cps");
+	display.print("cts");
 
 	display.setCursor(8,31);
 	display.print(PM_2_5,1);
-	display.print("cps");
+	display.print("cts");
 
 	display.setCursor(8,41);
 	display.print(PM_1,1);
-	display.print("cps");
+	display.print("cts");
 
 	display.display();
 }
