@@ -9,7 +9,7 @@
 
 MIT License
 
-Copyright (c) 2023 NIGHTHATER
+Copyright (c) 2024 NIGHTHATER
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -90,6 +90,7 @@ uint16_t VAR_BINS[24];
 //File name
 String IDevice = "G03"; // Change for Device Name //------------------------------------------------------------------------------------------------------- CUSTOMIZED
 String FileName = "";
+int FileIndex = 0;
 
 bool FLAG_new_file = false;
 
@@ -106,7 +107,6 @@ unsigned long TIME_measurement_start;
 //Timer Intervals in ms
 int INTERVAL_SD_Save 		= 	5000; 			// Determines the Interval in which measurements are taken / 	in miliseconds 5000ms recommended
 int INTERVAL_Display_Update 	= 	200;			// Determines the Interval in which Display is updated / 	in miliseconds 200ms recommended
-int INTERVAL_RTC_Update 	= 	200;			// Determines the Interval in which RTC is updated / 		in miliseconds 200ms recommended
 int INTERVAL_OPC_Readout 	= 	2500;			// Determines the Interval in which OPC is updated / 		in miliseconds 2500ms recommended
 
 //------------------------------------------//
@@ -158,11 +158,7 @@ void setup() {
 	Serial.print(__DATE__);
 	Serial.println(__TIME__);
 
-	//Initialize RTC
-	Rtc.Begin();     //Starts I2C
-	Rtc.Enable32kHzPin(false);
-	Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone); 
-
+	
 	OLED_ASYNC_display_Startup_Bar_Fill(random(13,20));
 	delay(random(250,750));
 	
@@ -171,7 +167,7 @@ void setup() {
 	// index = LastFileIndex+1
 	
 	//Create Filename
-	FileName = IDevice + '_' + index + ".csv";
+	FileName = IDevice + '_' + FileIndex + ".csv";
 
 	OLED_ASYNC_display_Startup_Bar_Fill(random(25,35));
 	delay(random(250,750));
@@ -260,7 +256,7 @@ void loop() {
 
 		//Upper Part
 		OLED_ASYNC_display_divider();
-		OLED_ASYNC_display_clock(TIME_Hour,TIME_Min,TIME_Sec);
+    OLED_ASYNC_display_Elapsed_Time();
 		OLED_ASYNC_display_HBRS_Logo_top_right();
 
 		//Lower Part
@@ -347,35 +343,8 @@ void loop() {
 		
 		//Create new File
 		//Prepare the Filename
-		TMonth = String(TIME_Month);
-		TDay = String(TIME_Day);
-		THour = String(TIME_Hour);
-		TMin = String(TIME_Min);
-		TSec = String(TIME_Sec);
-
-		//Append zeroes to Month, Day, etc, if neccescary
-		if(TIME_Month<10)
-		{
-			TMonth = '0' + String(TIME_Month);
-		}
-		if(TIME_Day<10)
-		{
-			TDay = '0' + String(TIME_Day);
-		}
-		if(TIME_Hour<10)
-		{
-			THour = '0' + String(TIME_Hour);
-		}
-		if(TIME_Min<10)
-		{
-			TMin = '0' + String(TIME_Min);
-		}
-		if(TIME_Sec<10)
-		{
-			TSec = '0' + String(TIME_Sec);
-		}
-		//Create Filename
-		FileName = IDevice + '_' + String(TIME_Year) + '-' + TMonth + '-' + TDay + 'T' + THour + '-' + TMin + '-' + TSec + ".csv";
+		
+		FileName = IDevice + "_" + FileIndex + ".csv";
 		
 		sensorData = SD.open(FileName, FILE_WRITE);
 		sensorData.close();  //Closing the file
@@ -460,11 +429,11 @@ void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Tempera
 			//Serial.print(DATE); //STILL TODO
 			Serial.print(VAR_Index);
 			Serial.print(';');
-			Serial.print(TIME_Hour);
+			Serial.print(hours);
 			Serial.print(':');
-			Serial.print(TIME_Min);
+			Serial.print(minutes);
 			Serial.print(':');
-			Serial.print(TIME_Sec);
+			Serial.print(seconds);
 			Serial.print(';');
 			Serial.print(VAR_Temperature); // Maybe replace . with ,
 			Serial.print(';');
