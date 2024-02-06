@@ -60,9 +60,6 @@ SOFTWARE.
 //Pins
 //Empty | Reserverd for UTIL Pins
 
-//RTC
-RtcDS3231<TwoWire> Rtc(Wire);
-
 //OLED
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
@@ -255,7 +252,6 @@ void setup() {
 void loop() {
 	//All Values, Inputs and Outputs will be updated asyncronous
 
-
 	//Check for Display Update
 	if(millis() - TIME_last_display_update > INTERVAL_Display_Update)
 	{
@@ -333,7 +329,7 @@ void loop() {
 		TIME_last_SD_save = millis() - (millis() - TIME_last_SD_save - INTERVAL_SD_Save);
 
 		OLED_ASYNC_display_save_icon(3,3);
-		saveData(sensorData, FileName, VAR_Index, VAR_Temperature, VAR_PM_10, VAR_PM_2_5, VAR_PM_1, TIME_Hour, TIME_Min, TIME_Sec, VAR_BINS);
+		saveData(sensorData, FileName, VAR_Index, VAR_Temperature, VAR_PM_10, VAR_PM_2_5, VAR_PM_1, VAR_BINS);
 		VAR_Index = VAR_Index + 1;
 		
 		if( (VAR_Index % 17280 == 0) && (VAR_Index != 0) ) //Since VAR_Index is a int it can only reach up to ~32k until it flips into the negative
@@ -415,7 +411,7 @@ void loop() {
 //█▀ █▀▄   █▀▀ ▄▀█ █▀█ █▀▄   █▀ ▄▀█ █░█ █ █▄░█ █▀▀
 //▄█ █▄▀   █▄▄ █▀█ █▀▄ █▄▀   ▄█ █▀█ ▀▄▀ █ █░▀█ █▄█
 
-void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Temperature, float VAR_PM_10, float VAR_PM_2_5, float VAR_PM_1, int TIME_Hour, int TIME_Min, int TIME_Sec, uint16_t VAR_BINS[24]){
+void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Temperature, float VAR_PM_10, float VAR_PM_2_5, float VAR_PM_1, uint16_t VAR_BINS[24]){
 	if(SD.exists(FileName)) // check the file is still there
 	//sensorData.println("DATE;TIME;INDEX;TEMPERATURE;HUMIDITY;PM10;PM2.5;PM1;BIN0;BIN1;BIN2;BIN3;BIN4;BIN5;BIN6;BIN7;BIN8;BIN9;BIN10;BIN11;BIN12;BIN13;BIN14;BIN15;BIN16;BIN17;BIN18;BIN19;BIN20;BIN21;BIN22;BIN23");
 	{ 
@@ -424,13 +420,21 @@ void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Tempera
 		if (sensorData)
 		{
 			//Write to SD Card
-			
+			unsigned long currentMillis = millis();
+      unsigned long seconds = currentMillis / 1000;
+      unsigned long minutes = seconds / 60;
+      unsigned long hours = minutes / 60;
+      unsigned long days = hours / 24;
+      currentMillis %= 1000;
+      seconds %= 60;
+      minutes %= 60;
+      hours %= 24;
 			//sensorData.print(DATE); //STILL TODO
-			sensorData.print(TIME_Hour);
+			sensorData.print(hours);
 			sensorData.print(':');
-			sensorData.print(TIME_Min);
+			sensorData.print(minutes);
 			sensorData.print(':');
-			sensorData.print(TIME_Sec);
+			sensorData.print(seconds);
 			sensorData.print(';');
 			sensorData.print(VAR_Index);
 			sensorData.print(';');
@@ -552,31 +556,6 @@ void OLED_ASYNC_display_save_icon(int x, int y)
 void OLED_ASYNC_remove_save_icon(int x, int y)
 {
 	display.fillRect(x,y,8,8,BLACK);
-	display.display();
-}
-
-void OLED_ASYNC_display_clock(int TIME_Hour, int TIME_Min, int TIME_Sec)
-//draws the current clock
-{
-	display.fillRect(41,4,49,10,BLACK); // black out current clock
-
-	display.setCursor(41,4);
-	display.setTextColor(WHITE);
-	if(TIME_Hour<10)
-	{
-		display.print('0');
-	}
-	display.print(String(TIME_Hour)+':');
-	if(TIME_Min<10)
-	{
-		display.print('0');
-	}
-	display.print(String(TIME_Min)+':');
-	if(TIME_Sec<10)
-	{
-		display.print('0');
-	}
-	display.print(TIME_Sec);
 	display.display();
 }
 
