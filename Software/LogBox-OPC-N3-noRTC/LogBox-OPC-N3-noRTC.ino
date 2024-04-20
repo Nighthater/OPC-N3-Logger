@@ -162,12 +162,14 @@ void setup() {
 	OLED_ASYNC_display_Startup_Bar_Fill(random(13,20));
 	delay(random(250,750));
 	
-	// Search for Last Created File
-	// TODO
-	// index = LastFileIndex+1
-	
-	//Create Filename
-	FileName = IDevice + '_' + FileIndex + ".csv";
+	//Initialize SD CARD
+	pinMode(CSpin, OUTPUT);
+	if (!SD.begin(CSpin)) {
+		Serial.println(F("FATAL ERROR 0x1A - SD-Card failed, or not present"));
+		// don't do anything more:
+		for(;;);
+	}
+	Serial.println(F("SD Card initialized."));
 
 	OLED_ASYNC_display_Startup_Bar_Fill(random(25,35));
 	delay(random(250,750));
@@ -181,15 +183,43 @@ void setup() {
 	OLED_ASYNC_display_Startup_Bar_Fill(random(45,65));
 	delay(random(500,1000));
 
-	//Initialize SD CARD
-	pinMode(CSpin, OUTPUT);
-	if (!SD.begin(CSpin)) {
-		Serial.println(F("FATAL ERROR 0x1A - SD-Card failed, or not present"));
-		// don't do anything more:
-		for(;;);
+	
+	// Read all filenames
+	const char* directory = "/"; // Directory where files are stored
+	File dir = SD.open(directory);
+	int maxIndex = 0;
+	// find the one with the highest File index
+	
+	while (true) {
+    File entry = dir.openNextFile();
+		if (!entry) 
+		{
+			// No more files
+			break;
+		}
+		String filename = entry.name();
+		entry.close();
+
+		// Parse the filename to extract the index part
+		int underscoreIndex = filename.lastIndexOf('_');
+		int dotIndex = filename.lastIndexOf('.');
+		
+		if (underscoreIndex != -1 && dotIndex != -1) 
+		{
+		  String indexString = filename.substring(underscoreIndex + 1, dotIndex);
+		  int index = indexString.toInt();
+		  if (index > maxIndex) 
+		  {
+			maxIndex = index;
+		  }
+		}
 	}
-	Serial.println(F("SD Card initialized."));
-	//Write new File
+	dir.close();
+
+	FileIndex = maxIndex + 1;
+	
+	//Create Filename
+	FileName = IDevice + '_' + FileIndex + ".csv";
 
 	sensorData = SD.open(FileName, FILE_WRITE);
 	sensorData.close();  //Closing the file
@@ -344,6 +374,8 @@ void loop() {
 		//Create new File
 		//Prepare the Filename
 		
+		FileIndex = FileIndex + 1
+		
 		FileName = IDevice + "_" + FileIndex + ".csv";
 		
 		sensorData = SD.open(FileName, FILE_WRITE);
@@ -398,7 +430,6 @@ void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Tempera
       seconds %= 60;
       minutes %= 60;
       hours %= 24;
-			//sensorData.print(DATE); //STILL TODO
 			sensorData.print(hours);
 			sensorData.print(':');
 			sensorData.print(minutes);
@@ -425,8 +456,6 @@ void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Tempera
       sensorData.println(';');
 			sensorData.close(); // close the file
 			
-			//Print on Console
-			//Serial.print(DATE); //STILL TODO
 			Serial.print(VAR_Index);
 			Serial.print(';');
 			Serial.print(hours);
@@ -613,15 +642,15 @@ void OLED_ASYNC_display_PM_values(float PM_10 ,float PM_2_5, float PM_1)
 
 	display.setCursor(8,21);
 	display.print(PM_10,1);
-	display.print("cps");
+	display.print("p");
 
 	display.setCursor(8,31);
 	display.print(PM_2_5,1);
-	display.print("cps");
+	display.print("p");
 
 	display.setCursor(8,41);
 	display.print(PM_1,1);
-	display.print("cps");
+	display.print("p");
 
 	display.display();
 }
