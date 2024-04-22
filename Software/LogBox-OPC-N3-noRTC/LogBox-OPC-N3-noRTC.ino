@@ -374,7 +374,7 @@ void loop() {
 		//Create new File
 		//Prepare the Filename
 		
-		FileIndex = FileIndex + 1
+		FileIndex = FileIndex + 1;
 		
 		FileName = IDevice + "_" + FileIndex + ".csv";
 		
