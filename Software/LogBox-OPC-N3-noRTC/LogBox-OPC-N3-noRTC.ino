@@ -88,7 +88,7 @@ float VAR_PM_1 = 0.0;
 uint16_t VAR_BINS[24];
 
 //File name
-String IDevice = "G03"; // Change for Device Name //------------------------------------------------------------------------------------------------------- CUSTOMIZED
+String IDevice = "G02"; // Change for Device Name //------------------------------------------------------------------------------------------------------- CUSTOMIZED
 String FileName = "";
 int FileIndex = 0;
 
@@ -640,6 +640,7 @@ void OLED_ASYNC_display_PM_values(float PM_10 ,float PM_2_5, float PM_1)
 	display.fillRect(8,31,62,7,BLACK);
 	display.fillRect(8,41,48,7,BLACK);
 
+  display.setTextColor(WHITE);
 	display.setCursor(8,21);
 	display.print(PM_10,1);
 	display.print("p");
