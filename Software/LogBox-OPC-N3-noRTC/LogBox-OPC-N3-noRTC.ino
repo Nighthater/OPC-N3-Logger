@@ -232,7 +232,7 @@ void setup() {
 	sensorData = SD.open(FileName, FILE_WRITE);
 	if (sensorData) {
 		//Write csv header
-		sensorData.println("TIME;INDEX;TEMPERATURE;HUMIDITY;PM10;PM2.5;PM1;BIN0;BIN1;BIN2;BIN3;BIN4;BIN5;BIN6;BIN7;BIN8;BIN9;BIN10;BIN11;BIN12;BIN13;BIN14;BIN15;BIN16;BIN17;BIN18;BIN19;BIN20;BIN21;BIN22;BIN23");
+		sensorData.println("TIME;INDEX;TEMPERATURE;HUM-REL;HUM-ABS;PM10;PM2.5;PM1;BIN0;BIN1;BIN2;BIN3;BIN4;BIN5;BIN6;BIN7;BIN8;BIN9;BIN10;BIN11;BIN12;BIN13;BIN14;BIN15;BIN16;BIN17;BIN18;BIN19;BIN20;BIN21;BIN22;BIN23");
 		// close the file:
 		sensorData.close();
 		Serial.print(F("New File Created: "));
@@ -313,6 +313,7 @@ void loop() {
 		
 		VAR_Temperature = hist.getTempC();
     VAR_Humidity = hist.getHumidity();
+    VAR_Humidity_ABS = CALC_abs_humidity(VAR_Temperature, VAR_Humidity);
 		
 		VAR_PM_10 = hist.pm10;
 		VAR_PM_2_5 = hist.pm2_5;
@@ -356,7 +357,7 @@ void loop() {
 		TIME_last_SD_save = millis() - (millis() - TIME_last_SD_save - INTERVAL_SD_Save);
 
 		OLED_ASYNC_display_save_icon(3,3);
-		saveData(sensorData, FileName, VAR_Index, VAR_Temperature, VAR_PM_10, VAR_PM_2_5, VAR_PM_1, VAR_BINS);
+		saveData(sensorData, FileName, VAR_Index, VAR_Temperature, VAR_Humidity, VAR_Humidity_ABS, VAR_PM_10, VAR_PM_2_5, VAR_PM_1, VAR_BINS);
 		VAR_Index = VAR_Index + 1;
 		
 		if( (VAR_Index % 17280 == 0) && (VAR_Index != 0) ) //Since VAR_Index is a int it can only reach up to ~32k until it flips into the negative
@@ -385,7 +386,7 @@ void loop() {
 		sensorData = SD.open(FileName, FILE_WRITE);
 		if (sensorData) {
 			//Write csv header
-			sensorData.println("TIME;INDEX;TEMPERATURE;HUMIDITY;PM10;PM2.5;PM1;BIN0;BIN1;BIN2;BIN3;BIN4;BIN5;BIN6;BIN7;BIN8;BIN9;BIN10;BIN11;BIN12;BIN13;BIN14;BIN15;BIN16;BIN17;BIN18;BIN19;BIN20;BIN21;BIN22;BIN23");
+			sensorData.println("TIME;INDEX;TEMPERATURE;HUM-REL;HUM-ABS;PM10;PM2.5;PM1;BIN0;BIN1;BIN2;BIN3;BIN4;BIN5;BIN6;BIN7;BIN8;BIN9;BIN10;BIN11;BIN12;BIN13;BIN14;BIN15;BIN16;BIN17;BIN18;BIN19;BIN20;BIN21;BIN22;BIN23");
 			// close the file:
 			sensorData.close();
 			Serial.print(F("New File Created: "));
@@ -413,9 +414,9 @@ void loop() {
 //█▀ █▀▄   █▀▀ ▄▀█ █▀█ █▀▄   █▀ ▄▀█ █░█ █ █▄░█ █▀▀
 //▄█ █▄▀   █▄▄ █▀█ █▀▄ █▄▀   ▄█ █▀█ ▀▄▀ █ █░▀█ █▄█
 
-void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Temperature, float VAR_PM_10, float VAR_PM_2_5, float VAR_PM_1, uint16_t VAR_BINS[24]){
+void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Temperature, float VAR_Humidity, float VAR_Humidity_ABS ,float VAR_PM_10, float VAR_PM_2_5, float VAR_PM_1, uint16_t VAR_BINS[24]){
 	if(SD.exists(FileName)) // check the file is still there
-	//sensorData.println("DATE;TIME;INDEX;TEMPERATURE;HUMIDITY;PM10;PM2.5;PM1;BIN0;BIN1;BIN2;BIN3;BIN4;BIN5;BIN6;BIN7;BIN8;BIN9;BIN10;BIN11;BIN12;BIN13;BIN14;BIN15;BIN16;BIN17;BIN18;BIN19;BIN20;BIN21;BIN22;BIN23");
+	//sensorData.println("DATE;TIME;INDEX;TEMPERATURE;HUM-REL;HUM-ABS;PM10;PM2.5;PM1;BIN0;BIN1;BIN2;BIN3;BIN4;BIN5;BIN6;BIN7;BIN8;BIN9;BIN10;BIN11;BIN12;BIN13;BIN14;BIN15;BIN16;BIN17;BIN18;BIN19;BIN20;BIN21;BIN22;BIN23");
 	{ 
 		// now append new data file
 		sensorData = SD.open(FileName, FILE_WRITE);
@@ -443,6 +444,8 @@ void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Tempera
 			sensorData.print(';');
 			sensorData.print(float(VAR_Humidity),0); // Maybe replace . with ,
 			sensorData.print(';');
+      sensorData.print(VAR_Humidity_ABS);
+      sensorData.print(';');
 			sensorData.print(VAR_PM_10,3); // Maybe replace . with ,
 			sensorData.print(';');
 			sensorData.print(VAR_PM_2_5,3); // Maybe replace . with ,
@@ -663,4 +666,13 @@ void OLED_ASYNC_display_file_name(String FileName)
   display.setCursor(41,4);
   display.print(FileName);
   display.display();
+}
+
+// Calculations
+
+float CALC_abs_humidity(float t, float hyd)
+{
+  float abs_humidity;
+  abs_humidity = (hyd*(611.2*exp((17.62*t)/(243.12+t))))/((461.51)*(243.12+t));
+  return abs_humidity;
 }
