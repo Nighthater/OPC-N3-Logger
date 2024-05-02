@@ -81,6 +81,7 @@ File sensorData;
 //Measurements
 float VAR_Temperature = 0.0;
 float VAR_Humidity = 0.0;
+float VAR_Humidity_ABS = 0.0;
 float VAR_PM_10 = 0.0;
 float VAR_PM_2_5 = 0.0;
 float VAR_PM_1 = 0.0;
