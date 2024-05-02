@@ -473,6 +473,8 @@ void saveData(File sensorData, String FileName, int VAR_Index, float VAR_Tempera
 			Serial.print(';');
 			Serial.print(float(VAR_Humidity),0); // Maybe replace . with ,
 			Serial.print(';');
+      Serial.print(VAR_Humidity_ABS);
+      Serial.print(';');
 			Serial.print(VAR_PM_10); // Maybe replace . with ,
 			Serial.print(';');
 			Serial.print(VAR_PM_2_5); // Maybe replace . with ,
