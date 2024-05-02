@@ -676,6 +676,6 @@ void OLED_ASYNC_display_file_name(String FileName)
 float CALC_abs_humidity(float t, float hyd)
 {
   float abs_humidity;
-  abs_humidity = (hyd*(611.2*exp((17.62*t)/(243.12+t))))/((461.51)*(243.12+t));
+  abs_humidity = (6.112*pow(2.71828182,((17.67*float(t))/(float(t)+243.5)))*float(hyd)*18.02 )/((273.15+float(t))*100*0.08314);
   return abs_humidity;
 }
