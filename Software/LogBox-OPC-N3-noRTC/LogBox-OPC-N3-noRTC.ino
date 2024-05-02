@@ -296,6 +296,7 @@ void loop() {
 		OLED_ASYNC_display_Elapsed_Time();
 		OLED_ASYNC_display_HUM_and_TMP(VAR_Temperature,int(VAR_Humidity));
 		OLED_ASYNC_display_PM_values(VAR_PM_10,VAR_PM_2_5,VAR_PM_1);
+    OLED_ASYNC_display_file_name(FileName);
 	}
 
 	//Check for OPC Readout
@@ -654,4 +655,12 @@ void OLED_ASYNC_display_PM_values(float PM_10 ,float PM_2_5, float PM_1)
 	display.print("p");
 
 	display.display();
+}
+
+void OLED_ASYNC_display_file_name(String FileName)
+{
+  display.fillRect(41,4,49,10,BLACK); // black out current filename
+  display.setCursor(41,4);
+  display.print(FileName);
+  display.display();
 }
